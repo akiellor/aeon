@@ -1,0 +1,19 @@
+Aeon
+===========================================================
+An analytics tool measuring how old a projects dependencies
+are.
+
+
+Example
+-----------------------------------------------------------
+
+require 'aeon'
+
+p Aeon.score
+
+TODO
+-----------------------------------------------------------
+* Spec it out a little bit
+* Build a rake task which can break when score exceeds 
+  threshhold
+
