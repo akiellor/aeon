@@ -1,8 +1,25 @@
 require "aeon/version"
 
 module Aeon
-  def self.score
-    Dependency.outdated.map(&:score).inject(0) {|sum, score| sum + score}
+  def self.score dependencies = Dependency.outdated
+    dependencies.map(&:score).inject(0) {|sum, score| sum + score}
+  end
+
+  class VersionDelta
+    attr_reader :offset, :delta
+
+    def initialize offset, delta
+      @offset = offset
+      @delta = delta
+    end
+
+    def magnitude
+      10.rpower(offset) * delta
+    end
+
+    def == other
+      other.offset == offset && other.delta == delta
+    end
   end
 
   class Version
@@ -12,11 +29,14 @@ module Aeon
       @segments = version.split('.')
     end
 
-    def - other
-      @segments.zip(other.segments).map do |dot_pair|
+    def compare other
+      pairs = @segments.zip(other.segments) and pairs.each_with_index do |dot_pair, index|
         r = dot_pair[0].to_i - dot_pair[1].to_i
-        r < 0 ? 0 : r
+        if r != 0
+          return VersionDelta.new((pairs.size - 1 - index), r)
+        end
       end
+      return VersionDelta.same
     end
   end
 
@@ -30,11 +50,7 @@ module Aeon
     end
 
     def score
-      dot_pair_delta = @remote_version - @local_version
-
-      (0..(dot_pair_delta.size - 1)).to_a.inject(0) do |result, dot_offset|
-        result + ((10.rpower dot_offset) * dot_pair_delta[(dot_pair_delta.size - 1) - dot_offset])
-      end
+      @remote_version.compare(@local_version).magnitude
     end
 
     def self.outdated

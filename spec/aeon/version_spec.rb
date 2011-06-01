@@ -8,6 +8,6 @@ describe Aeon::Version do
   its(:segments) { should == ["1", "2", "3"] }
 
   it "should return segment differences" do
-    (Aeon::Version.new("2.5.7") - subject).should == [1, 3, 4]
+    Aeon::Version.new("2.5.7").compare(subject).should == Aeon::VersionDelta.new(2, 1)
   end
 end
