@@ -23,6 +23,14 @@ module Aeon
     def == other
       other.offset == offset && other.delta == delta
     end
+
+    def same?
+      offset == -1
+    end
+
+    def self.same
+      new(-1, 0)
+    end
   end
 
   class Version
@@ -70,14 +78,9 @@ module Aeon
     attr_reader :name, :version
 
     def self.outdated
-      `gem outdated`.split("\n").map do |dep_line|
-        if m = dep_line.match(/^([^\s]+) \(([^\s]+) < ([^\)]+)\)$/)
-          name, local_version, remote_version = m.captures
-          Dependency.for_version(name, local_version)
-        else
-          raise "Failed to parse line: #{depline}"
-        end
-      end
+      Bundler.definition.specs.map do |spec|
+        Dependency.for_version spec.name, spec.version.to_s
+      end.select {|dep| dep.outdated?}
     end
 
     def self.all name
@@ -109,6 +112,10 @@ module Aeon
 
     def score
       latest.version.compare(@version).magnitude
+    end
+
+    def outdated?
+      !latest.version.compare(@version).same?
     end
 
     def latest
