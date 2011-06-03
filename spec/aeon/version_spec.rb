@@ -22,4 +22,6 @@ describe Aeon::Version do
   it { should_not == Aeon::Version.new("1.2.4", false) }
 
   it { should_not == Aeon::Version.new("1.2.3", true) }
+
+  it { should_not == {} }
 end

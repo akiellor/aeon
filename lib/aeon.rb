@@ -57,10 +57,9 @@ module Aeon
     end
 
     def == other
-      self.send(:"#{other.class.to_s.gsub('::', '__').downcase}_equals", other)
+      equals_method = :"#{other.class.to_s.gsub('::', '__').downcase}_equals"
+      respond_to?(equals_method) ? send(equals_method, other) : false
     end
-
-    private 
 
     def aeon__version_equals other
       @number == other.number && @prerelease == other.prerelease?
