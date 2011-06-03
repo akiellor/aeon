@@ -1,4 +1,7 @@
-require "aeon/version"
+require 'aeon/version'
+require 'net/http'
+require 'uri'
+require 'active_support'
 
 module Aeon
   def self.score dependencies = Dependency.outdated
@@ -23,10 +26,16 @@ module Aeon
   end
 
   class Version
-    attr_reader :segments
+    attr_reader :segments, :number
 
-    def initialize version
+    def initialize version, prerelease
+      @number = version
       @segments = version.split('.')
+      @prerelease = prerelease
+    end
+
+    def prerelease?
+      @prerelease
     end
 
     def compare other
@@ -38,30 +47,72 @@ module Aeon
       end
       return VersionDelta.same
     end
+
+    def == other
+      self.send(:"#{other.class.to_s.gsub('::', '__').downcase}_equals", other)
+    end
+
+    private 
+
+    def aeon__version_equals other
+      @number == other.number && @prerelease == other.prerelease?
+    end
+
+    def string_equals other
+      @number == other
+    end
+  end
+
+  class DependencyException < Exception
   end
 
   class Dependency
-    attr_reader :name
-
-    def initialize name, local_version, remote_version
-      @name = name
-      @local_version = local_version
-      @remote_version = remote_version
-    end
-
-    def score
-      @remote_version.compare(@local_version).magnitude
-    end
+    attr_reader :name, :version
 
     def self.outdated
       `gem outdated`.split("\n").map do |dep_line|
         if m = dep_line.match(/^([^\s]+) \(([^\s]+) < ([^\)]+)\)$/)
           name, local_version, remote_version = m.captures
-          Dependency.new name, Version.new(local_version), Version.new(remote_version)
+          Dependency.for_version(name, local_version)
         else
           raise "Failed to parse line: #{depline}"
         end
       end
+    end
+
+    def self.all name
+      if res = Net::HTTP.get(URI.parse("http://rubygems.org/api/v1/versions/#{name}"))
+        ActiveSupport::JSON.decode(res).map do |dep|
+          Dependency.new name, Version.new(dep['number'], dep['prerelease']) 
+        end
+      else
+        raise DependencyException, "Dependency #{name} not found."
+      end
+    end
+
+    def self.latest name
+      all(name).select { |dep| dep.stable? }.first
+    end
+
+    def self.for_version name, version
+      all(name).detect { |dep| dep.version == version }
+    end
+
+    def stable?
+      !@version.prerelease?
+    end
+
+    def initialize name, version
+      @name = name
+      @version = version
+    end
+
+    def score
+      latest.version.compare(@version).magnitude
+    end
+
+    def latest
+      self.class.latest(name)
     end
   end
 end

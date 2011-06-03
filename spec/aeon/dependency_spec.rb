@@ -2,11 +2,13 @@ require 'spec_helper'
 require 'aeon'
 
 describe Aeon::Dependency do
-  subject { Aeon::Dependency.new("gem", local_version, remote_version) }
+  subject { Aeon::Dependency.new("gem", local_version) }
   
   let(:local_version) { mock(:version) }
-  let(:remote_version) { mock(:version, :compare => delta) }
-  
+  let(:latest) { mock(:dependency, :version => mock(:version, :compare => delta)) }
+ 
+  before { subject.stub(:latest).and_return(latest) }
+
   context "remote version is 1 minor version ahead" do
     let(:delta) { Aeon::VersionDelta.new(1, 1) }
 
