@@ -76,12 +76,6 @@ module Aeon
   class Dependency
     attr_reader :name, :version
 
-    def self.outdated
-      Bundler.definition.specs.map do |spec|
-        Dependency.for_version spec.name, spec.version.to_s
-      end.select {|dep| dep.outdated?}
-    end
-
     def self.all name
       if res = Net::HTTP.get(URI.parse("http://rubygems.org/api/v1/versions/#{name}"))
         ActiveSupport::JSON.decode(res).map do |dep|
@@ -92,21 +86,31 @@ module Aeon
       end
     end
 
+    def self.outdated
+      Bundler.definition.specs.map do |spec|
+        Dependency.for_version spec.name, spec.version.to_s
+      end.select {|dep| dep.outdated?}
+    end
+
+    def self.stable name
+      stable(name).select { |dep| dep.stable? }
+    end
+
     def self.latest name
-      all(name).select { |dep| dep.stable? }.first
+      stable(name).first
     end
 
     def self.for_version name, version
       all(name).detect { |dep| dep.version == version }
     end
 
-    def stable?
-      !@version.prerelease?
-    end
-
     def initialize name, version
       @name = name
       @version = version
+    end
+
+    def stable?
+      !@version.prerelease?
     end
 
     def score
