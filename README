@@ -1,15 +1,16 @@
 Aeon
 ===========================================================
-An analytics tool measuring how old a projects dependencies
-are.
+An analytics tool measuring the version difference between
+local gems and the latest version of those gems.
 
 
 Example
 -----------------------------------------------------------
 
-require 'aeon'
-
-p Aeon.score
+> require 'aeon'
+=> true
+> Aeon.score
+=> 50
 
 TODO
 -----------------------------------------------------------
