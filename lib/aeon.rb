@@ -10,7 +10,7 @@ module Aeon
   end
 
   class Repository
-    def all
+    def all name
       raise "Unimplemented"
     end
 
@@ -38,7 +38,7 @@ module Aeon
   end
 
   class RubyGemsRepository < Repository
-    def all
+    def all name
       @results ||= {}
       @results[name] or @results[name] = ActiveSupport::JSON.decode(Net::HTTP.get(URI.parse("http://rubygems.org/api/v1/versions/#{name}"))).map do |dep|
         Dependency.new self, name, Gem::Version.new(dep['number']) 
