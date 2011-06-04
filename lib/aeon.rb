@@ -5,8 +5,8 @@ require 'active_support'
 require 'bundler'
 
 module Aeon
-  def self.score dependencies = RubyGemsRepository.new.outdated
-    dependencies.map(&:score).inject(0) {|sum, score| sum + score}
+  def self.score repo = RubyGemsRepository.new
+    repo.outdated.map(&:score).inject(0) {|sum, score| sum + score}
   end
 
   class Repository
@@ -47,7 +47,7 @@ module Aeon
   end
 
   class Dependency
-    attr_reader :name, :version
+    attr_reader :name, :version, :repository
 
     def initialize repository, name, version
       @repository = repository
@@ -73,6 +73,14 @@ module Aeon
 
     def latest
       @repository.latest(name)
+    end
+
+    def latest?
+      latest == self
+    end
+
+    def == other
+      @repository == other.repository && @name == other.name && @version == other.version
     end
   end
 end
