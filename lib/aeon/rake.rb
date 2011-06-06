@@ -29,6 +29,14 @@ module Aeon
         end
       end
     end
+
+    class Show < ::Rake::TaskLib
+      def initialize
+        task :show do
+          puts "Aeon score for HEAD `#{`git notes --ref=aeon-score show HEAD`.strip}`"
+        end
+      end
+    end
   end
 end
 
