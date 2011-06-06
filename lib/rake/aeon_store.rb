@@ -3,7 +3,7 @@ require 'rake'
 
 module Aeon
   module Rake
-    class Task < ::Rake::TaskLib
+    class Old < ::Rake::TaskLib
       attr_reader :tolerance
 
       def initialize name, &block
@@ -21,11 +21,11 @@ module Aeon
       end
     end
 
-    class Store < ::Rake::TaskLib
+    class Tag < ::Rake::TaskLib
       def initialize name
         task name do
           raise "Dirty working copy" unless `git status --porcelain`.split("\n").empty?
-          Aeon.score
+          sh "git notes --ref=aeon-score add -m \"#{Aeon.score}\""
         end
       end
     end
