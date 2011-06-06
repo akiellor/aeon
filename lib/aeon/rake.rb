@@ -32,8 +32,9 @@ module Aeon
 
     class Show < ::Rake::TaskLib
       def initialize
-        task :show do
-          puts "Aeon score for HEAD `#{`git notes --ref=aeon-score show HEAD`.strip}`"
+        task :show, :commit do |t, args|
+          args.with_defaults(:commit => 'HEAD')
+          puts "Aeon score for HEAD `#{`git notes --ref=aeon-score show #{args[:commit]}`.strip}`"
         end
       end
     end
